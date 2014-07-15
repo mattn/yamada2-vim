@@ -35,7 +35,7 @@ function! yamada2#Yamada()
   redraw
   while getchar(0) == 0
     let image = images[i % l]
-    silent! syntax clear yamada
+    silent! syntax clear
     for c in image.colors
       exe c
     endfor
