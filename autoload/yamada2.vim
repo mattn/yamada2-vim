@@ -2,7 +2,7 @@ let s:data_dir = expand('<sfile>:h:h') . '/data'
 
 function! yamada2#Yamada()
   let images = []
-  for f in split(glob(s:data_dir . '/*'), "\n")
+  for f in split(glob(s:data_dir . '/*.xpm'), "\n")
     let lines = readfile(f)
     let pos = index(lines, '/* pixels */')
     let colors = []
