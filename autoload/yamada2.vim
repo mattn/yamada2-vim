@@ -2,12 +2,6 @@ let s:data_dir = expand('<sfile>:h:h') . '/data'
 
 function! s:gui2cui(rgb)
   let rgb = map(matchlist(a:rgb, '#\(..\)\(..\)\(..\)')[1:3], '0 + ("0x".v:val)')
-  if len(rgb) == 0
-    let rgb = lightline#colortable#name_to_rgb(a:rgb)
-    if len(rgb) == 0
-      throw a:rgb
-    endif
-  endif
   let rgb = [rgb[0] > 127 ? 4 : 0, rgb[1] > 127 ? 2 : 0, rgb[2] > 127 ? 1 : 0]
   return rgb[0] + rgb[1] + rgb[2]
 endfunction
@@ -16,16 +10,17 @@ function! yamada2#Yamada()
   let images = []
   for f in sort(split(glob(s:data_dir . '/*.xpm'), "\n"))
     let lines = readfile(f)
-    let pos = index(lines, '/* pixels */')
+    let pos1 = index(lines, '/* columns rows colors chars-per-pixel */')
+    let pos2 = index(lines, '/* pixels */')
     let colors = []
-    for line in lines[4:pos-1]
-      let s = line[1:-3]
-      call add(colors, printf('syntax match yamada%s /[\x%02X][\x%02X]/', s[6:], char2nr(s[0]), char2nr(s[1])))
-      exe printf("highlight yamada%s guifg='%s' guibg='%s' ctermfg=%d ctermbg=%d", s[6:], s[5:], s[5:], s:gui2cui(s[5:]), s:gui2cui(s[5:]))
+    for line in lines[pos1+2:pos2-1]
+      let s = split(line[1:-3], ' c ')
+      call add(colors, printf('syntax match yamada%s /%s/', s[1][1:], join(map(split(s[0], '\zs'), 'printf("[\\x%02x]",char2nr(v:val))'), '')))
+      exe printf("highlight yamada%s guifg='%s' guibg='%s' ctermfg=%d ctermbg=%d", s[1][1:], s[1], s[1], s:gui2cui(s[1]), s:gui2cui(s[1]))
     endfor
     call add(images, {
     \ "colors" : colors,
-    \ "data" : map(lines[pos+1 :], 'matchstr(v:val, ''^"\zs.\+\ze",\?$'')')
+    \ "data" : map(lines[pos2+1 :], 'matchstr(v:val, ''^"\zs.\+\ze",\?$'')')
     \})
   endfor
 
