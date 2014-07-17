@@ -1,5 +1,17 @@
 let s:data_dir = expand('<sfile>:h:h') . '/data'
 
+function! s:gui2cui(rgb)
+  let rgb = map(matchlist(a:rgb, '#\(..\)\(..\)\(..\)')[1:3], '0 + ("0x".v:val)')
+  if len(rgb) == 0
+    let rgb = lightline#colortable#name_to_rgb(a:rgb)
+    if len(rgb) == 0
+      throw a:rgb
+    endif
+  endif
+  let rgb = [rgb[0] > 127 ? 4 : 0, rgb[1] > 127 ? 2 : 0, rgb[2] > 127 ? 1 : 0]
+  return rgb[0] + rgb[1] + rgb[2]
+endfunction
+
 function! yamada2#Yamada()
   let images = []
   for f in sort(split(glob(s:data_dir . '/*.xpm'), "\n"))
@@ -9,7 +21,7 @@ function! yamada2#Yamada()
     for line in lines[4:pos-1]
       let s = line[1:-3]
       call add(colors, printf('syntax match yamada%s /[\x%02X][\x%02X]/', s[6:], char2nr(s[0]), char2nr(s[1])))
-      exe printf('highlight yamada%s guifg=''%s'' guibg=''%s''', s[6:], s[5:], s[5:])
+      exe printf("highlight yamada%s guifg='%s' guibg='%s' ctermfg=%d ctermbg=%d", s[6:], s[5:], s[5:], s:gui2cui(s[5:]), s:gui2cui(s[5:]))
     endfor
     call add(images, {
     \ "colors" : colors,
